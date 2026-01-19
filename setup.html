@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduHub Setup Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .setup-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 EduHub Setup Guide</h1>
+    
+    <div class="setup-box warning">
+        <h3>⚠️ PHP Server Required</h3>
+        <p>The login page downloads because you need a PHP server to run this website. Follow the steps below to set it up properly.</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Install XAMPP (Recommended)</h3>
+        <p>Download and install XAMPP from: <a href="https://www.apachefriends.org/" target="_blank">https://www.apachefriends.org/</a></p>
+        <p>XAMPP includes Apache web server, PHP, and MySQL - everything you need!</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Start Services</h3>
+        <p>1. Open XAMPP Control Panel</p>
+        <p>2. Start <strong>Apache</strong> and <strong>MySQL</strong> services</p>
+        <p>3. Make sure both show "Running" status</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Copy Files</h3>
+        <p>1. Copy all website files to: <code>C:\xampp\htdocs\eduhub\</code></p>
+        <p>2. Make sure the folder structure looks like this:</p>
+        <pre>
+C:\xampp\htdocs\eduhub\
+├── index.html
+├── css/
+├── js/
+├── admin/
+├── api/
+├── config/
+└── uploads/
+        </pre>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: Access Website</h3>
+        <p>Open your browser and go to:</p>
+        <p><strong>Main Website:</strong> <a href="http://localhost/eduhub/index.html">http://localhost/eduhub/index.html</a></p>
+        <p><strong>Admin Login:</strong> <a href="http://localhost/eduhub/admin/login.php">http://localhost/eduhub/admin/login.php</a></p>
+    </div>
+
+    <div class="setup-box success">
+        <h3>✅ Default Admin Credentials</h3>
+        <p><strong>Username:</strong> admin</p>
+        <p><strong>Password:</strong> admin123</p>
+    </div>
+
+    <div class="step">
+        <h3>Alternative: Use Built-in PHP Server</h3>
+        <p>If you have PHP installed separately:</p>
+        <p>1. Open Command Prompt in the website folder</p>
+        <p>2. Run: <code>php -S localhost:8000</code></p>
+        <p>3. Access: <a href="http://localhost:8000">http://localhost:8000</a></p>
+    </div>
+
+    <div class="setup-box">
+        <h3>🔧 Troubleshooting</h3>
+        <ul>
+            <li><strong>Port 80 busy:</strong> Change Apache port in XAMPP config</li>
+            <li><strong>MySQL won't start:</strong> Check if another MySQL service is running</li>
+            <li><strong>Files not found:</strong> Ensure files are in htdocs folder</li>
+            <li><strong>Database errors:</strong> Make sure MySQL is running</li>
+        </ul>
+    </div>
+</body>
+</html>

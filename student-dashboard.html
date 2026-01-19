@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - EduHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="admin/css/admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-graduation-cap"></i> EduHub Student</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="student-dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="student-courses.html"><i class="fas fa-book"></i> My Courses</a></li>
+                <li><a href="student-schedule.html"><i class="fas fa-calendar"></i> Schedule</a></li>
+                <li><a href="student-attendance.html"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+                <li><a href="student-progress.html"><i class="fas fa-chart-line"></i> Progress</a></li>
+                <li><a href="student-profile.html"><i class="fas fa-user"></i> Profile</a></li>
+                <li><a href="index.html" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="admin-main">
+            <header class="admin-header">
+                <h1>Student Dashboard</h1>
+                <div class="admin-user" id="student-welcome">
+                    Welcome, Student
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <!-- Student Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="enrolled-courses">0</h3>
+                            <p>Enrolled Courses</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="completed-courses">0</h3>
+                            <p>Completed Courses</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="attendance-rate">0%</h3>
+                            <p>Attendance Rate</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="study-hours">0h</h3>
+                            <p>Study Hours</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>Quick Actions</h2>
+                    <div class="actions-grid">
+                        <a href="#available-courses" class="action-card" onclick="showAvailableCourses()">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Enroll in Course</span>
+                        </a>
+                        <a href="student-schedule.html" class="action-card">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>View Schedule</span>
+                        </a>
+                        <a href="#" class="action-card" onclick="joinLiveClass()">
+                            <i class="fas fa-video"></i>
+                            <span>Join Live Class</span>
+                        </a>
+                        <a href="student-progress.html" class="action-card">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>View Progress</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Upcoming Classes -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>Upcoming Classes</h2>
+                        <a href="student-schedule.html" class="btn btn-secondary">View All</a>
+                    </div>
+                    
+                    <div id="upcoming-classes">
+                        <!-- Upcoming classes will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h2>Recent Activity</h2>
+                    <div class="activity-list" id="student-activity">
+                        <!-- Student activity will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Available Courses -->
+                <div id="available-courses" class="table-container" style="display: none;">
+                    <div class="table-header">
+                        <h2>Available Courses</h2>
+                        <button class="btn btn-secondary" onclick="hideAvailableCourses()">Close</button>
+                    </div>
+                    
+                    <div id="courses-list">
+                        <!-- Available courses will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = null;
+        let studentEnrollments = [];
+        let studentActivity = [];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentStudent();
+            loadStudentData();
+            loadUpcomingClasses();
+            loadStudentActivity();
+            updateStatistics();
+        });
+
+        function loadCurrentStudent() {
+            currentStudent = JSON.parse(localStorage.getItem('eduhub_current_user') || 'null');
+            
+            if (!currentStudent || currentStudent.user_type !== 'student') {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('student-welcome').textContent = 
+                `Welcome, ${currentStudent.first_name} ${currentStudent.last_name}`;
+        }
+
+        function loadStudentData() {
+            // Load student enrollments
+            studentEnrollments = JSON.parse(localStorage.getItem('eduhub_enrollments') || '[]')
+                .filter(enrollment => enrollment.studentId === currentStudent.id);
+            
+            // Load student activity
+            studentActivity = JSON.parse(localStorage.getItem('eduhub_student_activity') || '[]')
+                .filter(activity => activity.studentId === currentStudent.id);
+        }
+
+        function loadUpcomingClasses() {
+            const liveClasses = JSON.parse(localStorage.getItem('eduhub_live_classes') || '[]');
+            const now = new Date();
+            
+            // Filter for upcoming classes in the next 7 days
+            const upcomingClasses = liveClasses.filter(liveClass => {
+                const startTime = new Date(liveClass.start_time);
+                const daysDiff = (startTime - now) / (1000 * 60 * 60 * 24);
+                return daysDiff >= 0 && daysDiff <= 7;
+            }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+            
+            const container = document.getElementById('upcoming-classes');
+            
+            if (upcomingClasses.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No upcoming classes in the next 7 days.</p>';
+                return;
+            }
+            
+            container.innerHTML = upcomingClasses.slice(0, 5).map(liveClass => {
+                const startTime = new Date(liveClass.start_time);
+                const isToday = startTime.toDateString() === now.toDateString();
+                const isLive = now >= startTime && now <= new Date(liveClass.end_time);
+                
+                return `
+                    <div class="class-card ${isLive ? 'live' : ''}">
+                        <div class="class-info">
+                            <h4>${liveClass.title}</h4>
+                            <p><i class="fas fa-user"></i> ${liveClass.instructor}</p>
+                            <p><i class="fas fa-calendar"></i> ${startTime.toLocaleDateString()}</p>
+                            <p><i class="fas fa-clock"></i> ${startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        </div>
+                        <div class="class-actions">
+                            ${isLive ? 
+                                `<span class="live-indicator">LIVE NOW</span>
+                                 <button class="btn btn-primary" onclick="joinClass('${liveClass.meeting_link}')">Join Now</button>` :
+                                `<span class="class-status">${isToday ? 'Today' : 'Upcoming'}</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadStudentActivity() {
+            const activityContainer = document.getElementById('student-activity');
+            
+            if (studentActivity.length === 0) {
+                activityContainer.innerHTML = `
+                    <div class="activity-item">
+                        <i class="fas fa-info-circle"></i>
+                        <div class="activity-info">
+                            <p><strong>Welcome to EduHub!</strong></p>
+                            <small>Start by enrolling in courses and attending classes</small>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            activityContainer.innerHTML = studentActivity
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5)
+                .map(activity => `
+                    <div class="activity-item">
+                        <i class="${activity.icon}"></i>
+                        <div class="activity-info">
+                            <p><strong>${activity.title}</strong></p>
+                            <small>${activity.description} - ${new Date(activity.timestamp).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function updateStatistics() {
+            const enrolledCourses = studentEnrollments.length;
+            const completedCourses = studentEnrollments.filter(e => e.status === 'completed').length;
+            
+            // Calculate attendance rate
+            const attendanceRecords = JSON.parse(localStorage.getItem('eduhub_attendance') || '[]');
+            const studentAttendance = [];
+            
+            attendanceRecords.forEach(record => {
+                if (record.students[currentStudent.id]) {
+                    studentAttendance.push(record.students[currentStudent.id].status === 'present');
+                }
+            });
+            
+            const attendanceRate = studentAttendance.length > 0 ? 
+                Math.round((studentAttendance.filter(Boolean).length / studentAttendance.length) * 100) : 0;
+            
+            // Calculate study hours (mock data)
+            const studyHours = studentActivity.filter(a => a.type === 'video_watched' || a.type === 'course_accessed').length * 2;
+            
+            document.getElementById('enrolled-courses').textContent = enrolledCourses;
+            document.getElementById('completed-courses').textContent = completedCourses;
+            document.getElementById('attendance-rate').textContent = attendanceRate + '%';
+            document.getElementById('study-hours').textContent = studyHours + 'h';
+        }
+
+        function showAvailableCourses() {
+            const courses = JSON.parse(localStorage.getItem('eduhub_courses') || '[]');
+            const enrolledCourseIds = studentEnrollments.map(e => e.courseId);
+            const availableCourses = courses.filter(course => !enrolledCourseIds.includes(course.id));
+            
+            const container = document.getElementById('courses-list');
+            
+            if (availableCourses.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No new courses available for enrollment.</p>';
+            } else {
+                container.innerHTML = availableCourses.map(course => `
+                    <div class="course-enrollment-card">
+                        <div class="course-info">
+                            <h4>${course.title}</h4>
+                            <p>${course.description}</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-user"></i> ${course.instructor}</span>
+                                <span><i class="fas fa-clock"></i> ${course.duration}</span>
+                            </div>
+                        </div>
+                        <div class="course-actions">
+                            <button class="btn btn-primary" onclick="enrollInCourse(${course.id})">
+                                <i class="fas fa-plus"></i> Enroll
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('available-courses').style.display = 'block';
+        }
+
+        function hideAvailableCourses() {
+            document.getElementById('available-courses').style.display = 'none';
+        }
+
+        function enrollInCourse(courseId) {
+            const courses = JSON.parse(localStorage.getItem('eduhub_courses') || '[]');
+            const course = courses.find(c => c.id === courseId);
+            
+            if (!course) return;
+            
+            // Create enrollment record
+            const enrollment = {
+                id: Date.now(),
+                studentId: currentStudent.id,
+                courseId: courseId,
+                courseName: course.title,
+                instructor: course.instructor,
+                enrolledAt: new Date().toISOString(),
+                status: 'active',
+                progress: 0
+            };
+            
+            // Add to enrollments
+            const allEnrollments = JSON.parse(localStorage.getItem('eduhub_enrollments') || '[]');
+            allEnrollments.push(enrollment);
+            localStorage.setItem('eduhub_enrollments', JSON.stringify(allEnrollments));
+            
+            // Add to student activity
+            const activity = {
+                id: Date.now(),
+                studentId: currentStudent.id,
+                type: 'course_enrolled',
+                title: 'Course Enrollment',
+                description: `Enrolled in ${course.title}`,
+                icon: 'fas fa-book',
+                timestamp: new Date().toISOString()
+            };
+            
+            studentActivity.push(activity);
+            const allStudentActivity = JSON.parse(localStorage.getItem('eduhub_student_activity') || '[]');
+            allStudentActivity.push(activity);
+            localStorage.setItem('eduhub_student_activity', JSON.stringify(allStudentActivity));
+            
+            // Update current user's course count
+            currentStudent.total_courses = (currentStudent.total_courses || 0) + 1;
+            const users = JSON.parse(localStorage.getItem('eduhub_users') || '[]');
+            const userIndex = users.findIndex(u => u.id === currentStudent.id);
+            if (userIndex !== -1) {
+                users[userIndex] = currentStudent;
+                localStorage.setItem('eduhub_users', JSON.stringify(users));
+                localStorage.setItem('eduhub_current_user', JSON.stringify(currentStudent));
+            }
+            
+            alert(`Successfully enrolled in ${course.title}!`);
+            loadStudentData();
+            updateStatistics();
+            hideAvailableCourses();
+        }
+
+        function joinClass(meetingLink) {
+            if (meetingLink) {
+                window.open(meetingLink, '_blank');
+                
+                // Record activity
+                const activity = {
+                    id: Date.now(),
+                    studentId: currentStudent.id,
+                    type: 'class_joined',
+                    title: 'Joined Live Class',
+                    description: 'Attended a live class session',
+                    icon: 'fas fa-video',
+                    timestamp: new Date().toISOString()
+                };
+                
+                studentActivity.push(activity);
+                const allStudentActivity = JSON.parse(localStorage.getItem('eduhub_student_activity') || '[]');
+                allStudentActivity.push(activity);
+                localStorage.setItem('eduhub_student_activity', JSON.stringify(allStudentActivity));
+                
+                loadStudentActivity();
+            } else {
+                alert('Meeting link not available');
+            }
+        }
+
+        function joinLiveClass() {
+            const liveClasses = JSON.parse(localStorage.getItem('eduhub_live_classes') || '[]');
+            const now = new Date();
+            
+            const currentLiveClass = liveClasses.find(liveClass => {
+                const startTime = new Date(liveClass.start_time);
+                const endTime = new Date(liveClass.end_time);
+                return now >= startTime && now <= endTime;
+            });
+            
+            if (currentLiveClass) {
+                joinClass(currentLiveClass.meeting_link);
+            } else {
+                alert('No live classes are currently active');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('eduhub_current_user');
+        }
+    </script>
+
+    <style>
+        .class-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: white;
+        }
+        
+        .class-card.live {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .class-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: #2c3e50;
+        }
+        
+        .class-info p {
+            margin: 0.25rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .class-info i {
+            width: 16px;
+            margin-right: 0.5rem;
+        }
+        
+        .class-actions {
+            text-align: right;
+        }
+        
+        .live-indicator {
+            background: #e74c3c;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        
+        .class-status {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .course-enrollment-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: white;
+        }
+        
+        .course-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: #2c3e50;
+        }
+        
+        .course-info p {
+            margin: 0 0 1rem 0;
+            color: #666;
+        }
+        
+        .course-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .course-meta i {
+            margin-right: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .class-card,
+            .course-enrollment-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .class-actions,
+            .course-actions {
+                width: 100%;
+                text-align: left;
+            }
+        }
+    </style>
+</body>
+</html>
